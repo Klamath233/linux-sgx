@@ -123,25 +123,17 @@ struct sgx_enclave_add_page {
 	__u16	mrmask;
 } __attribute__((__packed__));
 
-/*
- * enum sgx_enclave_init_flags - flags for &sgx_enclave_init
- * @SGX_ENCLAVE_INIT_ARCH:	this is an architectural enclave
- */
-enum sgx_enclave_init_flags {
-	SGX_ENCLAVE_INIT_ARCH	= 1,
-};
-
 /**
  * struct sgx_enclave_init - parameter structure for the
  *                           %SGX_IOC_ENCLAVE_INIT ioctl
  * @addr:	address in the ELRANGE
  * @sigstruct:	address for the page data
- * @flags:	initialization flags
+ * @einittoken:	EINITTOKEN
  */
 struct sgx_enclave_init {
 	__u64	addr;
 	__u64	sigstruct;
-	__u64	flags;
+	__u64	einittoken;
 } __attribute__((__packed__));
 
 #endif /* _UAPI_ASM_X86_SGX_H */
