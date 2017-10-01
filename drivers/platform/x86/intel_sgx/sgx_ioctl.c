@@ -207,6 +207,7 @@ static long sgx_ioc_enclave_init(struct file *filep, unsigned int cmd,
 {
 	struct sgx_enclave_init *initp = (struct sgx_enclave_init *)arg;
 	unsigned long sigstructp = (unsigned long)initp->sigstruct;
+	unsigned long einittokenp = (unsigned long)initp->einittoken;
 	unsigned long encl_id = initp->addr;
 	struct sgx_sigstruct *sigstruct;
 	struct sgx_einittoken *einittoken;
@@ -224,6 +225,11 @@ static long sgx_ioc_enclave_init(struct file *filep, unsigned int cmd,
 
 	ret = copy_from_user(sigstruct, (void __user *)sigstructp,
 			     sizeof(*sigstruct));
+	if (ret)
+		goto out;
+
+	ret = copy_from_user(einittoken, (void __user *)einittokenp,
+			     sizeof(*einittoken));
 	if (ret)
 		goto out;
 
