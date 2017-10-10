@@ -251,8 +251,10 @@ static bool sgx_process_add_page_req(struct sgx_add_page_req *req,
 	}
 
 	ret = vm_insert_pfn(vma, encl_page->addr, PFN_DOWN(epc_page->pa));
-	if (ret)
+	if (ret) {
+		sgx_put_backing(backing, 0);
 		return false;
+	}
 
 	ret = sgx_eadd(encl->secs.epc_page, epc_page, encl_page->addr,
 		       &req->secinfo, backing);
