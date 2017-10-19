@@ -431,7 +431,7 @@ static const struct mmu_notifier_ops sgx_mmu_notifier_ops = {
 	.release	= sgx_mmu_notifier_release,
 };
 
-// Xi: initialize an encl_page with virtual (linear) address `addr`. Note the actual mapping is done by EADD??
+// Xi: initialize an encl_page with virtual (linear) address `addr`.
 // Also create a version array slot for the page.
 static int sgx_init_page(struct sgx_encl *encl, struct sgx_encl_page *entry,
 			 unsigned long addr, unsigned int alloc_flags)
@@ -613,10 +613,11 @@ int sgx_encl_create(struct sgx_secs *secs)
 
 	secs_vaddr = sgx_get_page(secs_epc);
 
+	// Xi: ECREATES copy secs from information that pginfo provides.
 	pginfo.srcpge = (unsigned long)secs;
-	pginfo.linaddr = 0;
-	pginfo.secinfo = (unsigned long)&secinfo;
-	pginfo.secs = 0;
+	pginfo.linaddr = 0;                       // Xi: not used, must be zero
+	pginfo.secinfo = (unsigned long)&secinfo; // Xi: all zeros - SECS
+	pginfo.secs = 0;                          // Xi: not used, must be zero
 	memset(&secinfo, 0, sizeof(secinfo));
 	ret = __ecreate((void *)&pginfo, secs_vaddr);
 
@@ -628,6 +629,7 @@ int sgx_encl_create(struct sgx_secs *secs)
 		goto out;
 	}
 
+	// Xi: set software debug flag if specified in SECS
 	if (secs->attributes & SGX_ATTR_DEBUG)
 		encl->flags |= SGX_ENCL_DEBUG;
 
@@ -641,6 +643,9 @@ int sgx_encl_create(struct sgx_secs *secs)
 	}
 
 	down_read(&current->mm->mmap_sem);
+
+	// Xi: at this point, although ECREATE has already created the enclave, 
+	// since we have not returned yet, the created param is still false.
 	ret = sgx_encl_find(current->mm, secs->base, false, &vma);
 	if (ret) {
 		up_read(&current->mm->mmap_sem);

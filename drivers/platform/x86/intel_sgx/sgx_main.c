@@ -268,6 +268,7 @@ static int sgx_dev_init(struct device *parent, bool locked_msrs)
 		}
 	}
 
+	// Xi: from CPUID, we get EPC sections address and size
 	for (i = 0; i < SGX_MAX_EPC_BANKS; i++) {
 		cpuid_count(SGX_CPUID, i + SGX_CPUID_EPC_BANKS, &eax, &ebx,
 			    &ecx, &edx);
@@ -285,6 +286,7 @@ static int sgx_dev_init(struct device *parent, bool locked_msrs)
 
 	sgx_nr_epc_banks = i;
 
+	// Xi: Map all EPC pages into kernel memory space for x86-64 systems
 	for (i = 0; i < sgx_nr_epc_banks; i++) {
 #ifdef CONFIG_X86_64
 		sgx_epc_banks[i].va = (unsigned long)
