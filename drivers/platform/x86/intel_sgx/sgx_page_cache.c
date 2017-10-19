@@ -72,7 +72,7 @@
 static LIST_HEAD(sgx_free_list);
 static DEFINE_SPINLOCK(sgx_free_list_lock);
 
-LIST_HEAD(sgx_tgid_ctx_list);
+LIST_HEAD(sgx_tgid_ctx_list); // Xi: list of enclave thread groups (processes)?
 DEFINE_MUTEX(sgx_tgid_ctx_mutex);
 atomic_t sgx_va_pages_cnt = ATOMIC_INIT(0);
 static unsigned int sgx_nr_total_epc_pages;
@@ -122,6 +122,7 @@ int sgx_test_and_clear_young(struct sgx_encl_page *page, struct sgx_encl *encl)
 				   sgx_test_and_clear_young_cb, vma->vm_mm);
 }
 
+// Xi: grab a victim process to be evicted in Round-Robin fashion.
 static struct sgx_tgid_ctx *sgx_isolate_tgid_ctx(unsigned long nr_to_scan)
 {
 	struct sgx_tgid_ctx *ctx = NULL;
@@ -393,6 +394,7 @@ static int ksgxswapd(void *p)
 	return 0;
 }
 
+// Xi: add all pages of the bank to a free list.
 int sgx_add_epc_bank(resource_size_t start, unsigned long size, int bank)
 {
 	unsigned long i;

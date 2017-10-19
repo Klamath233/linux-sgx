@@ -431,6 +431,8 @@ static const struct mmu_notifier_ops sgx_mmu_notifier_ops = {
 	.release	= sgx_mmu_notifier_release,
 };
 
+// Xi: initialize an encl_page with virtual (linear) address `addr`. Note the actual mapping is done by EADD??
+// Also create a version array slot for the page.
 static int sgx_init_page(struct sgx_encl *encl, struct sgx_encl_page *entry,
 			 unsigned long addr, unsigned int alloc_flags)
 {
@@ -440,17 +442,22 @@ static int sgx_init_page(struct sgx_encl *encl, struct sgx_encl_page *entry,
 	void *vaddr;
 	int ret = 0;
 
+	// Xi: search for an available Version Array page
+	// va stands for version array not virtual address!!!
+	// SHIT waste me so much time..
 	list_for_each_entry(va_page, &encl->va_pages, list) {
 		va_offset = sgx_alloc_va_slot(va_page);
 		if (va_offset < PAGE_SIZE)
 			break;
 	}
 
+	// Xi: new VA page is needed.
 	if (va_offset == PAGE_SIZE) {
 		va_page = kzalloc(sizeof(*va_page), GFP_KERNEL);
 		if (!va_page)
 			return -ENOMEM;
 
+		// Xi: given alloc flags, return a free sgx_epc_page structure.
 		epc_page = sgx_alloc_page(alloc_flags);
 		if (IS_ERR(epc_page)) {
 			kfree(va_page);
@@ -466,6 +473,7 @@ static int sgx_init_page(struct sgx_encl *encl, struct sgx_encl_page *entry,
 			return -EFAULT;
 		}
 
+		// Xi: Add a empty version array in the page.
 		ret = __epa(vaddr);
 		sgx_put_page(vaddr);
 
@@ -580,10 +588,12 @@ int sgx_encl_create(struct sgx_secs *secs)
 	void *secs_vaddr;
 	long ret;
 
+	// Xi: Allocate and init encl properties
 	encl = sgx_encl_alloc(secs);
 	if (IS_ERR(secs))
 		return PTR_ERR(encl);
 
+	// Xi: Allocate an sgx page for SECS
 	secs_epc = sgx_alloc_page(0);
 	if (IS_ERR(secs_epc)) {
 		ret = PTR_ERR(secs_epc);
@@ -592,6 +602,7 @@ int sgx_encl_create(struct sgx_secs *secs)
 
 	encl->secs.epc_page = secs_epc;
 
+	// Xi: Associate current tgid (posix pid) to the enclave
 	ret = sgx_add_to_tgid_ctx(encl);
 	if (ret)
 		goto out;

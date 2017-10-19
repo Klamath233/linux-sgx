@@ -76,10 +76,11 @@
 
 #define SGX_VA_SLOT_COUNT 512
 
+// Xi: basic structure: EPC page, used in many places like version arrays
 struct sgx_epc_page {
-	resource_size_t	pa;
-	struct list_head list;
-	struct sgx_encl_page *encl_page;
+	resource_size_t	pa;              // Xi: pa | section/bank number
+	struct list_head list;           // Xi: free list of EPC pages
+	struct sgx_encl_page *encl_page; 
 };
 
 enum sgx_alloc_flags {
@@ -114,11 +115,11 @@ enum sgx_encl_page_flags {
 };
 
 struct sgx_encl_page {
-	unsigned long addr;
-	unsigned int flags;
-	struct sgx_epc_page *epc_page;
-	struct sgx_va_page *va_page;
-	unsigned int va_offset;
+	unsigned long addr;            // Xi: linear address
+	unsigned int flags;            // Xi: flags (TCS/RESERVED)
+	struct sgx_epc_page *epc_page; // Xi: data structrue representing the physical epc_page
+	struct sgx_va_page *va_page;   // Xi: version array page
+	unsigned int va_offset;        // Xi: version array offset
 };
 
 struct sgx_tgid_ctx {

@@ -88,7 +88,7 @@ u64 sgx_encl_size_max_32;
 u64 sgx_encl_size_max_64;
 u64 sgx_xfrm_mask = 0x3;
 u32 sgx_misc_reserved;
-u32 sgx_xsave_size_tbl[64];
+u32 sgx_xsave_size_tbl[64]; // Xi: offset + size
 bool sgx_locked_msrs;
 
 #ifdef CONFIG_COMPAT
@@ -176,6 +176,7 @@ static struct bus_type sgx_subsys = {
 };
 
 struct sgx_context {
+	// Xi: why are there two devs?
 	struct device dev;
 	struct cdev cdev;
 };
@@ -295,6 +296,7 @@ static int sgx_dev_init(struct device *parent, bool locked_msrs)
 			goto out_iounmap;
 		}
 #endif
+		// Xi: alloc and add epc data structure to a free list.
 		ret = sgx_add_epc_bank(sgx_epc_banks[i].pa,
 				       sgx_epc_banks[i].size, i);
 		if (ret) {
