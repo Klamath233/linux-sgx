@@ -646,6 +646,9 @@ int sgx_encl_create(struct sgx_secs *secs)
 
 	// Xi: at this point, although ECREATE has already created the enclave, 
 	// since we have not returned yet, the created param is still false.
+	// 
+	// The VMA is created by user space SDK per the following statement
+	// void* enclave_base = mmap(NULL, (size_t)secs->size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, m_hdevice, 0);
 	ret = sgx_encl_find(current->mm, secs->base, false, &vma);
 	if (ret) {
 		up_read(&current->mm->mmap_sem);
@@ -660,6 +663,7 @@ int sgx_encl_create(struct sgx_secs *secs)
 		goto out;
 	}
 
+	// Xi: the VMA is then associate with the enclave object.
 	vma->vm_private_data = encl;
 	up_read(&current->mm->mmap_sem);
 
@@ -764,7 +768,7 @@ static int __sgx_encl_add_page(struct sgx_encl *encl,
 			       struct sgx_secinfo *secinfo,
 			       unsigned int mrmask)
 {
-	u64 page_type = secinfo->flags & SGX_SECINFO_PAGE_TYPE_MASK;
+	u64 page_type = secinfo->flags & SGX_SECINFO_PAGE_TYPE_MASK; // Xi: TCS/SECS/REG
 	struct page *backing;
 	struct sgx_add_page_req *req = NULL;
 	int ret;
@@ -866,6 +870,8 @@ int sgx_encl_add_page(struct sgx_encl *encl, unsigned long addr, void *data,
 	struct sgx_encl_page *page;
 	int ret;
 
+	// Xi: `data` is the kmapped page containing the page data
+	// `page` is actually a pointer to the sgx_encl_page struct.
 	page = kzalloc(sizeof(*page), GFP_KERNEL);
 	if (!page)
 		return -ENOMEM;
